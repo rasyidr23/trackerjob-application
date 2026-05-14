@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { company, position, link, appliedAt, status, location, salaryRange, notes, deadline } = body;
+    const { company, position, link, appliedAt, status, location, salaryRange, notes, deadline, source } = body;
 
     if (!company || !position) {
       return NextResponse.json({ error: "Company and position are required" }, { status: 400 });
@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
         location: location?.trim() || null,
         salaryRange: salaryRange?.trim() || null,
         notes: notes?.trim() || null,
+        source: source?.trim() || null,
         deadline: deadline ? new Date(deadline) : null,
       },
     });

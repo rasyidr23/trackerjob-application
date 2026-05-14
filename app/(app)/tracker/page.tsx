@@ -12,8 +12,14 @@ interface Job {
   location?: string;
   salaryRange?: string;
   notes?: string;
+  source?: string;
   deadline?: string;
 }
+
+const SOURCE_PRESETS = [
+  "LinkedIn", "Jobstreet", "Glints", "Kalibrr", "Talentics",
+  "GrabJobs", "Indeed", "Website Perusahaan", "Lainnya",
+];
 
 const STATUS_LIST = ["Applied", "Administration", "Interview", "Technical Test", "HR Interview", "Offering", "Accepted", "Rejected"];
 
@@ -31,6 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
 const emptyForm = {
   company: "", position: "", link: "", appliedAt: new Date().toISOString().split("T")[0],
   status: "Applied", location: "", salaryRange: "", notes: "", deadline: "",
+  source: "", customSource: "",
 };
 
 export default function TrackerPage() {
@@ -70,11 +77,14 @@ export default function TrackerPage() {
 
   function openEdit(job: Job) {
     setEditJob(job);
+    const isPreset = job.source ? SOURCE_PRESETS.includes(job.source) : true;
     setForm({
       company: job.company, position: job.position, link: job.link ?? "",
       appliedAt: job.appliedAt?.split("T")[0] ?? new Date().toISOString().split("T")[0],
       status: job.status, location: job.location ?? "", salaryRange: job.salaryRange ?? "",
       notes: job.notes ?? "", deadline: job.deadline?.split("T")[0] ?? "",
+      source: isPreset ? (job.source ?? "") : "Lainnya",
+      customSource: !isPreset ? (job.source ?? "") : "",
     });
     setShowModal(true);
   }
@@ -82,9 +92,11 @@ export default function TrackerPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+    const resolvedSource = form.source === "Lainnya" ? form.customSource.trim() : form.source.trim();
+    const payload = { ...form, source: resolvedSource || null };
     const url = editJob ? `/api/jobs/${editJob.id}` : "/api/jobs";
     const method = editJob ? "PUT" : "POST";
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (res.ok) {
       showToast(editJob ? "Lamaran berhasil diupdate!" : "Lamaran berhasil ditambahkan!", "success");
       setShowModal(false);
@@ -183,6 +195,7 @@ export default function TrackerPage() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900 dark:text-white">{job.company}</div>
                       {job.salaryRange && <div className="text-xs text-gray-400 mt-0.5">💰 {job.salaryRange}</div>}
+                      {job.source && <div className="text-xs text-gray-400 mt-0.5">📌 {job.source}</div>}
                     </td>
                     <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{job.position}</td>
                     <td className="px-4 py-3">
@@ -251,6 +264,25 @@ export default function TrackerPage() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Posisi *</label>
                   <input required value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} className="input-field" placeholder="Posisi pekerjaan" />
                 </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Platform / Sumber Lamaran</label>
+                <select
+                  value={form.source}
+                  onChange={(e) => setForm({ ...form, source: e.target.value, customSource: "" })}
+                  className="input-field"
+                >
+                  <option value="">-- Pilih Platform --</option>
+                  {SOURCE_PRESETS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {form.source === "Lainnya" && (
+                  <input
+                    value={form.customSource}
+                    onChange={(e) => setForm({ ...form, customSource: e.target.value })}
+                    className="input-field mt-2"
+                    placeholder="Tuliskan platform / sumber lamaran..."
+                  />
+                )}
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Link Lowongan</label>

@@ -23,7 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const body = await req.json();
-    const { company, position, link, appliedAt, status, location, salaryRange, notes, deadline } = body;
+    const { company, position, link, appliedAt, status, location, salaryRange, notes, deadline, source } = body;
 
     const job = await prisma.jobApplication.update({
       where: { id },
@@ -36,6 +36,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         location: location?.trim() || null,
         salaryRange: salaryRange?.trim() || null,
         notes: notes?.trim() || null,
+        source: source?.trim() || null,
         deadline: deadline ? new Date(deadline) : null,
       },
     });
