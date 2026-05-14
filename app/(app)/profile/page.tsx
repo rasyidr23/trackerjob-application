@@ -104,6 +104,62 @@ export default function ProfilePage() {
             </>
           )}
         </div>
+
+        {/* Form Ubah Password */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 dark:bg-zinc-900 dark:ring-zinc-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ubah Password</h2>
+          
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const currentPassword = formData.get("currentPassword");
+              const newPassword = formData.get("newPassword");
+              const confirmPassword = formData.get("confirmPassword");
+
+              if (newPassword !== confirmPassword) {
+                showToast("Konfirmasi password baru tidak cocok", "error");
+                return;
+              }
+
+              const btn = e.currentTarget.querySelector("button");
+              if (btn) btn.disabled = true;
+
+              try {
+                const res = await fetch("/api/auth/change-password", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ currentPassword, newPassword }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast("Password berhasil diubah", "success");
+                (e.target as HTMLFormElement).reset();
+              } catch (err: any) {
+                showToast(err.message, "error");
+              } finally {
+                if (btn) btn.disabled = false;
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password Saat Ini</label>
+              <input name="currentPassword" type="password" required className="input-field" placeholder="••••••••" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password Baru</label>
+              <input name="newPassword" type="password" required className="input-field" placeholder="Minimal 6 karakter" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Konfirmasi Password Baru</label>
+              <input name="confirmPassword" type="password" required className="input-field" placeholder="Ulangi password baru" />
+            </div>
+            <button type="submit" className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+              Update Password
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
